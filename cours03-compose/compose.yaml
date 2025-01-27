@@ -1,0 +1,46 @@
+# Hello world!
+# principal:
+#   myInt: 12345
+#   myFloat: 1.2345
+#   myString: hello
+#   myString2: "hello world"
+#   myBool: true
+#   myBool2: false
+#   myList:
+#     - pogo
+#     - poutine
+#     - etc
+#   users:
+#     - bob:
+#         name: "Bob"
+#         jobs:
+#           - builder
+#           - admin
+#     - john:
+#         name: "John"
+#         jobs:
+#           - admin
+
+volumes:
+  ubuntu_data:
+
+services:
+  ubuntu-1:
+    image: ubuntu
+    command: tail -f /dev/null
+    ports:
+      - 8080:80
+      - 8081:80
+    environment:
+      - MY_USER=mael
+      - MY_PASSWORD=12345678
+      - MY_DESCRIPTION="Hello world"
+    volumes:
+      # - <volume-id>:<container-path>
+      - ubuntu_data:/etc
+  ubuntu-2:
+    image: ubuntu:20.04
+    command: tail -f /dev/null
+    ports:
+      - 7777:1234
+      - 1234:1234
