@@ -1,0 +1,24 @@
+volumes:
+  ubuntu_data:
+
+services:
+  ubuntu-1:
+    image: ubuntu
+    command: tail -f /dev/null
+    ports:
+      - ${UBUNTU_1_PORT_EXTERNAL}:80
+    environment:
+      - MY_USER=mael
+      - MY_PASSWORD=${UBUNTU_1_PASSWORD}
+      - MY_DESCRIPTION="Hello world"
+    volumes:
+      # - <volume-id>:<container-path>
+      - ubuntu_data:/etc
+      # bind mount
+      # - <local-path>:<container-path>
+      - ./ubuntu-1/test.txt:/home/ubuntu/test.txt
+  ubuntu-2:
+    image: ubuntu:20.04
+    command: tail -f /dev/null
+    ports:
+      - ${UBUNTU_2_PORT_EXTERNAL}:1234
