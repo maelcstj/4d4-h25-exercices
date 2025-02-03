@@ -1,6 +1,10 @@
 volumes:
   ubuntu_data:
 
+networks:
+  my-network-1:
+  my-network-2:
+
 services:
   ubuntu-1:
     image: ubuntu
