@@ -1,0 +1,15 @@
+{
+    "name": "user-management-server",
+    "version": "1.0.0",
+    "description": "A simple Node.js server to manage users with MySQL and CORS support",
+    "main": "index.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "body-parser": "^1.20.1",
+      "cors": "^2.8.5",
+      "express": "^4.18.2",
+      "mysql": "^2.18.1"
+    }
+  }

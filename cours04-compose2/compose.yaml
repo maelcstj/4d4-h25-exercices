@@ -21,6 +21,8 @@ services:
       # bind mount
       # - <local-path>:<container-path>
       - ./ubuntu-1/test.txt:/home/ubuntu/test.txt
+    networks:
+      - my-network-1
   ubuntu-2:
     image: ubuntu:20.04
     command: tail -f /dev/null

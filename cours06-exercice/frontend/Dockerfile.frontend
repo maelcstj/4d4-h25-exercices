@@ -1,0 +1,16 @@
+# 1.	Dans le dossier frontend, créer un Dockerfile.frontend 
+# 1.1.	Démarrer du tag spécifique le plus récent d’alpine, ne pas utiliser latest
+FROM alpine:3.21.2
+
+# 1.2.	Installer les applications : apache2, netcat
+RUN apk add --no-cache apache2 \
+    && apk add --no-cache netcat-openbsd
+
+# 1.3.	Copier les fichiers du dossier frontend à l’emplacement /var/www/localhost/htdocs/
+COPY . /var/www/localhost/htdocs/
+
+# 1.4.	Ouvrir le port 80
+EXPOSE 80
+
+# 1.5.	Au lancement du contenant, démarrer Apache avec la commande httpd -D FOREGROUND
+CMD ["httpd", "-D", "FOREGROUND"]
