@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: cours11-servicesconfigmap-nginx
+        imagePullPolicy: Never # Ne pas tlélcarPour images locales
+        ports:
+        - containerPort: 80
+        # Conserver la commande de lancement nginx
+        # Mais modifier les arguments pour ajouter plus de trucs dans les logs
+        # args: 
+        # - "-g"
+        # - "daemon off; error_log /dev/stdout info;"
+        livenessProbe:
+          # tcpSocket:
+          #   port: 80
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        env:
+        # - name: MY_INT
+        #   value: "12345"
+        # - name: MY_BOOL
+        #   value: "true"
+        # - name: MY_STRING
+        #   value: "Hello world $(MY_INT)"
+        - name: MY_INT
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_int_value
+        - name: MY_BOOL
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_bool_value
+        - name: MY_STRING
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_string_value
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  my_int_value: "98765"
+  my_bool_value: "false"
+  # Non permis dans un ConfigMap
+  # my_string_value: "Hello world $(my_int_value)" 
+  my_string_value: "Bye world 98765"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-internal
+spec:
+  type: ClusterIP # Par défaut
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-external
+spec:
+  type: NodePort # Nécessaire pour ajouter nodePort
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80        # Marche mieux si même port que targetPort
+      targetPort: 80  # Marche mieux si même port que port
+      nodePort: 30080 # 30000 - 32627
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu
+  labels:
+    app: ubuntu
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: ubuntu
+  template:
+    metadata:
+      labels:
+        app: ubuntu
+    spec:
+      containers:
+      - name: ubuntu
+        image: cours11-servicesconfigmap-ubuntu
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        # tail -f /dev/null
+        command: ["tail"]
+        args:
+        - "-f"
+        - "/dev/null"
+        livenessProbe:
+          exec:
+            command:
+            - echo
+            - "Hello world!"
+          initialDelaySeconds: 5
+          periodSeconds: 30
