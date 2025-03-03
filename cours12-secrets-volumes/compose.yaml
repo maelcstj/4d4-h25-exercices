@@ -1,0 +1,9 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.nginx
+  ubuntu:
+    build:
+      context: ./ubuntu
+      dockerfile: Dockerfile.ubuntu

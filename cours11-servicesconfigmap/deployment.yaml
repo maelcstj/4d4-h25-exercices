@@ -55,6 +55,7 @@ spec:
             configMapKeyRef:
               name: nginx-config
               key: my_string_value
+        # - envFrom: # A voir si vous voulez utiliser le fichier au complet
 ---
 apiVersion: v1
 kind: ConfigMap
