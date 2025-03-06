@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1 # Toujours 1 pour les bases de données
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      volumes:
+      - name: mysql-volume
+        persistentVolumeClaim:
+          claimName: mysql-volume-claim
+      containers:
+      - name: mysql
+        image: mysql:latest
+        ports:
+          - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            # value: "123456789" 
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: mysql_root_password
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-volume
+        
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    # Dossier doit exister à l'emplacement local avant créer le PV
+    path: /run/desktop/mnt/host/c/volumes/mysql # C:/volumes/mysql
+  persistentVolumeReclaimPolicy: Delete # Supprimer les fichiers lors de la suppression du PV
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  type: NodePort # Nécessaire pour ajouter nodePort:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306        # Même port que targetPort et que celui du Pod
+      targetPort: 3306  # Même port que port et que celui du Pod
+      nodePort: 30006   # 30000 - 32627
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-volume-claim
+spec:
+  storageClassName: manual 
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

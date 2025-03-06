@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # Volumes sont bindés pour l'ensemble des différents conteneurs du Pod
+      volumes:
+      - name: nginx-config-files
+        configMap:
+          name: nginx-config-files
+      - name: nginx-config-all
+        configMap:
+          name: nginx-config-all
+      containers:
+      - name: nginx
+        image: custom-nginx
+        imagePullPolicy: Never      # Utiliser image locale buildée par Docker
+        volumeMounts:
+        - name: nginx-config-files  # Pointe vers un name dans volumes plus haut
+          subPath: test1            # Nom du fichier dans le ConfigMap
+          mountPath: /etc/test/test1
+        - name: nginx-config-all    # Pointe vers un name dans volumes plus haut
+          mountPath: /usr/share/nginx/html/ # Écrase tavec tous les fichiers du ConfigMap
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        env:
+        - name: MY_INT
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_int_value
+        - name: MY_BOOL
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_bool_value
+        - name: MY_STRING
+          valueFrom:
+            configMapKeyRef:
+              name: nginx-config
+              key: my_string_value
+        # - envFrom: # A voir si vous voulez utiliser le fichier au complet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-internal
+spec:
+  type: ClusterIP # Par défaut
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-external
+spec:
+  type: NodePort # Nécessaire pour ajouter nodePort
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80        # Marche mieux si même port que targetPort
+      targetPort: 80  # Marche mieux si même port que port
+      nodePort: 30080 # 30000 - 32627
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  my_int_value: "98765"
+  my_bool_value: "false"
+  # Non permis dans un ConfigMap
+  # my_string_value: "Hello world $(my_int_value)" 
+  my_string_value: "Bye world 98765"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-files
+data:
+  test1: |
+    hello world!
+    bye world!
+  test2: |
+    123456789
+    dkdhfsdh
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-all
+data:
+  index.html: |
+    Welcome to index!
+  hello.html: |
+    Welcome to hello!
+  pogo.html: |
+    Welcome to pogo!

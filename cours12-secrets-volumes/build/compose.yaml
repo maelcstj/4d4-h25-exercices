@@ -3,7 +3,9 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile.nginx
+    image: custom-nginx              # Tag automatique de l'image après le build
   ubuntu:
     build:
       context: ./ubuntu
       dockerfile: Dockerfile.ubuntu
+    image: custom-ubuntu              # Tag automatique de l'image pour le build
