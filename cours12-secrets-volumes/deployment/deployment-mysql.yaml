@@ -33,24 +33,6 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/mysql
           name: mysql-volume
-        
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-volume
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    # Dossier doit exister à l'emplacement local avant créer le PV
-    path: /run/desktop/mnt/host/c/volumes/mysql # C:/volumes/mysql
-  persistentVolumeReclaimPolicy: Delete # Supprimer les fichiers lors de la suppression du PV
 ---
 apiVersion: v1
 kind: Service
@@ -77,3 +59,20 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    # Dossier doit exister à l'emplacement local avant créer le PV
+    path: /run/desktop/mnt/host/c/volumes/mysql # C:/volumes/mysql
+  persistentVolumeReclaimPolicy: Delete # Supprimer les fichiers lors de la suppression du PV
