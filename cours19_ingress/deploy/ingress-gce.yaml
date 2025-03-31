@@ -1,0 +1,106 @@
+# Documentation Ingress : https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+# pathType
+# Prefix : Tous les routes commencant par /..., route préfixe doit aussi exister sur le service
+# Exact  : Une seule route exacte existante sur le service
+
+# Documentation GCE : https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
+# kubernetes.io/ingress.class annotation deprecation
+# Although the kubernetes.io/ingress.class annotation is deprecated in Kubernetes, GKE continues to use this annotation.
+# You cannot use the ingressClassName field to specify a GKE Ingress. You must use the kubernetes.io/ingress.class annotation.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-gce-demo
+  annotations:
+    kubernetes.io/ingress.class: "gce" # Deprecated, mais nécessaire pour GCE Ingress
+spec:
+  # TODO:
+  # Route par défaut si aucune autre path ne correspond
+  # http://<ingress-ip>/
+  # http://<ingress-ip>/page1
+  # http://<ingress-ip>/page2
+  # Fonctionnel, routes existes dans nginx (voir default.conf)
+
+  defaultBackend:
+    service:
+      name: nginx-service
+      port:
+        number: 80
+
+  rules:
+    - host: maelcstj.duckdns.org
+      http:
+        paths:
+          # http://<ingress-ip>/users
+          # Fonctionnel, route /users existe dans node1 (voir index.js)
+          - path: /users
+            pathType: Exact
+            backend:
+              service:
+                name: node1-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 3000 # targetPort du service
+
+          # http://<ingress-ip>/transactions
+          # Fonctionnel, route /transactions existe dans node2 (voir index.js)
+          - path: /transactions
+            pathType: Exact
+            backend:
+              service:
+                name: node2-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 3000 # targetPort du service
+
+          # TODO:
+          # http://<ingress-ip>/nginx/
+          # Non Fonctionnel, route /nginx/ n'existe pas dans nginx (voir default.conf)
+          - path: /nginx
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 80 # targetPort du service
+
+          # TODO:
+          # http://<ingress-ip>/backend/node1/
+          # http://<ingress-ip>/backend/node1/users
+          # Non Fonctionnel, route /backend/node1/ n'existe pas dans node1 (voir index.js)
+          - path: /backend/node1
+            pathType: Prefix
+            backend:
+              service:
+                name: node1-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 3000 # targetPort du service
+
+
+          # http://<ingress-ip>/backend/node2/
+          # http://<ingress-ip>/backend/node2/transactions
+          # Fonctionnel, route /backend/node2/ existe dans node2 (voir index.js)
+          - path: /backend/node2
+            pathType: Prefix
+            backend:
+              service:
+                name: node2-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 3000 # targetPort du service
+
+    # TODO: Remplacer avec le domaine (ex. my-domain.duckdns.org)
+    # http://<domain-name>/
+    # http://<domain-name>/users
+    # http://<domain-name>/users/1
+    # Fonctionnel, routes existent dans node1 (voir index.js)
+    # - host: xxx.duckdns.org    # TODO: Remplacer avec le domaine (ex. my-domain.duckdns.org)
+    - host: maelusers.duckdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: node1-service # Nom du service (ClusterIP suffisant)
+                port:
+                  number: 3000 # targetPort du service

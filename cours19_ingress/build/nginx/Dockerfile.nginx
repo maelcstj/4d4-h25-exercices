@@ -1,0 +1,7 @@
+FROM nginx:stable
+
+# Copy custom configuration into the container.
+COPY ./content/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy the html files to nginx’s document root.
+COPY ./content/html/ /usr/share/nginx/html/
