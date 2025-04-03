@@ -19,11 +19,11 @@ echo "- roles/editor"
 echo "- roles/artifactregistry.admin"
 echo "- roles/compute.admin"
 
-# Add the Editor role
+# Add the generic Admin role
 # https://cloud.google.com/iam/docs/understanding-roles#legacy-basic
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="user:$EMAIL" \
-  --role="roles/editor"
+  --role="roles/admin"
 
 # Add the Artifact Registry Admin role
 # https://cloud.google.com/iam/docs/understanding-roles#artifactregistry.admin
@@ -32,9 +32,15 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role="roles/artifactregistry.admin"
 
 # Add the Compute Admin role
-# https://cloud.google.com/iam/docs/understanding-roles#container.admin
+# https://cloud.google.com/iam/docs/understanding-roles#compute.admin
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="user:$EMAIL" \
   --role="roles/compute.admin"
+
+# Add the Container Admin role
+# https://cloud.google.com/iam/docs/understanding-roles#container.admin 
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="user:$EMAIL" \
+  --role="roles/container.admin"
 
 echo "User '$EMAIL' invitation and role assignment to project '$PROJECT_ID' complete."

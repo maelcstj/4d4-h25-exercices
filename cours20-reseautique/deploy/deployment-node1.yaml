@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node1-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node1
+  template:
+    metadata:
+      labels:
+        app: node1
+    spec:
+      containers:
+      - name: node1
+
+        ### Version locale Docker Desktop
+        # Utiliser la dernière image locale buildée
+        # image: node1:latest
+        # imagePullPolicy: Never
+
+        ### Version GKE
+        # Utiliser un tag spécifique du Artifact Registry
+        # Forcer le téléchargement de l'image afin d'éviter d'utiliser des mauvaises images
+        # image: <ACTIFACT_REGISTRY_URL>/node1:1.0 # TODO: Remplacer avec le chemin de votre image
+        image: us-east1-docker.pkg.dev/h25-4d4-24/test-repo/node1:1.0
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node1-service
+spec:
+  selector:
+    app: node1
+  # type: NodePort
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      # port: 30001

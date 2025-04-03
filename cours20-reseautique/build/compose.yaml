@@ -1,0 +1,16 @@
+services:
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.nginx
+
+  node1:
+    build:
+      context: ./node1
+      dockerfile: Dockerfile.node1
+
+  node2:
+    build:
+      context: ./node2
+      dockerfile: Dockerfile.node2

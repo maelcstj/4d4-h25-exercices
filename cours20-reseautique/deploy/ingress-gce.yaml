@@ -1,0 +1,260 @@
+# Documentation Ingress : https://kubernetes.io/docs/concepts/services-networking/ingress/
+# Documentation GCE : https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-gce-demo
+  annotations:
+    kubernetes.io/ingress.class: "gce" # Deprecated, mais nécessaire pour GCE Ingress
+
+    # Créer une adresse IP statique dans Terraform et l'attribuer au Ingress
+    kubernetes.io/ingress.global-static-ip-name: address-ingress
+
+    # Créer des ManagedCertificate dans Terraform et les attribuer au Ingress
+    # https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-multi-ssl?hl=en
+    networking.gke.io/managed-certificates: "managed-cert-ingress-1,managed-cert-ingress-2,managed-cert-ingress-3,managed-cert-ingress-4"
+   
+    # TODO: Alternative pour créer des certificats dans Terraform et les attribuer au Ingress
+    # Permet de créer une seule fois les certificats et de ne pas les détruire lorsque le cluster est détruit
+    # Ne semble pas fonctionner pour l'instant ou est peut-être encore plus lent que le ManagedCertificate
+    # networking.gke.io/pre-shared-cert: "managed-cert-ingress-tf-1,managed-cert-ingress-tf-2" 
+
+    # Bloques les requêtes HTTP (80)
+    # kubernetes.io/ingress.allow-http: "false"
+
+    # Rediriger les requêtes HTTP (80) vers HTTPS (443) à l'aide d'un FrontendConfig
+    networking.gke.io/v1beta1.FrontendConfig: security-config-ingress
+
+spec:
+
+  # Route par défaut si aucune autre path ne correspond
+  # http://<ingress-ip>/
+  # http://<ingress-ip>/page1
+  # http://<ingress-ip>/page2
+  # Fonctionnel, routes existes dans nginx (voir default.conf)
+  defaultBackend: 
+    service: 
+      name: nginx-service 
+      port: 
+        number: 80 
+
+  rules:
+
+    - host: maelcstj.duckdns.org # Votre domaine DuckDNS
+      http:
+        paths:
+
+          # http://<ingress-ip>/users
+           # Fonctionnel, route /users existe dans node1 (voir index.js)
+          - path: /users 
+            pathType: Exact
+            backend:
+              service:
+                name: node1-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/transactions
+          # Fonctionnel, route /transactions existe dans node2 (voir index.js)
+          - path: /transactions 
+            pathType: Exact 
+            backend:
+              service:
+                name: node2-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/nginx/
+          # Non Fonctionnel, route /nginx/ n'existe pas dans nginx (voir default.conf)
+          - path: /nginx/ 
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+
+          # http://<ingress-ip>/backend/node1/
+          # http://<ingress-ip>/backend/node1/users
+          # Non Fonctionnel, route /backend/node1/ n'existe pas dans node1 (voir index.js)
+          - path: /backend/node1/ 
+            pathType: Prefix 
+            backend: 
+              service:
+                name: node1-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/backend/node2/
+          # http://<ingress-ip>/backend/node2/transactions
+          # Fonctionnel, route /backend/node2/ existe dans node2 (voir index.js)
+          - path: /backend/node2 
+            pathType: Prefix 
+            backend: 
+              service:
+                name: node2-service
+                port:
+                  number: 3000
+
+    # http://<domain-name>/
+    # http://<domain-name>/users
+    # http://<domain-name>/users/1
+    # Fonctionnel, routes existent dans node1 (voir index.js)
+    - host: maelusers.duckdns.org # Votre domaine DuckDNS
+      http:
+        paths:
+          - path: / 
+            pathType: Prefix 
+            backend: 
+              service: 
+                name: node1-service
+                port:
+                  number: 3000
+
+
+
+    # Créer 2 entrées dans Dynu similaires à DuckDNS
+    # Copier les routes au complet, host: du Ingress ne supporte pas plusieurs valeurs
+
+    - host: maelcstj.freeddns.org # Votre domaine Dynu
+      http:
+        paths:
+
+          # http://<ingress-ip>/users
+           # Fonctionnel, route /users existe dans node1 (voir index.js)
+          - path: /users 
+            pathType: Exact
+            backend:
+              service:
+                name: node1-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/transactions
+          # Fonctionnel, route /transactions existe dans node2 (voir index.js)
+          - path: /transactions 
+            pathType: Exact 
+            backend:
+              service:
+                name: node2-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/nginx/
+          # Non Fonctionnel, route /nginx/ n'existe pas dans nginx (voir default.conf)
+          - path: /nginx/ 
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+
+          # http://<ingress-ip>/backend/node1/
+          # http://<ingress-ip>/backend/node1/users
+          # Non Fonctionnel, route /backend/node1/ n'existe pas dans node1 (voir index.js)
+          - path: /backend/node1/ 
+            pathType: Prefix 
+            backend: 
+              service:
+                name: node1-service
+                port:
+                  number: 3000
+
+          # http://<ingress-ip>/backend/node2/
+          # http://<ingress-ip>/backend/node2/transactions
+          # Fonctionnel, route /backend/node2/ existe dans node2 (voir index.js)
+          - path: /backend/node2 
+            pathType: Prefix 
+            backend: 
+              service:
+                name: node2-service
+                port:
+                  number: 3000
+
+    # http://<domain-name>/
+    # http://<domain-name>/users
+    # http://<domain-name>/users/1
+    # Fonctionnel, routes existent dans node1 (voir index.js)
+    - host: maelusers.freeddns.org # Votre domaine Dynu
+      http:
+        paths:
+          - path: / 
+            pathType: Prefix 
+            backend: 
+              service: 
+                name: node1-service
+                port:
+                  number: 3000
+
+
+# TODO: Créer 4 ManagedCertificates dans Terraform et l'attribuer au Ingress
+# https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs?hl=en
+
+# https://cloud.google.com/load-balancing/docs/ssl-certificates/troubleshooting
+# gcloud compute ssl-certificates list
+# gcloud compute ssl-certificates describe <certificat> --global
+# Ne pas définir plusieurs domains dans un certificat, si un domaine échoue (PROVISIONING/FAILED_NOT_VISIBLE), tous échouent
+
+# ---
+# apiVersion: networking.gke.io/v1
+# kind: ManagedCertificate
+# metadata:
+#   name: managed-cert-ingress-1
+#   annotations:
+#     deletionProtection: "true" # Commenter pour supprimer le certificat
+# spec:
+#   domains:
+#     - ...
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: managed-cert-ingress-1
+  annotations:
+    deletionProtection: "true" # Commenter pour supprimer le certificat
+spec:
+  domains:
+    - maelcstj.duckdns.org
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: managed-cert-ingress-2
+  annotations:
+    deletionProtection: "true" # Commenter pour supprimer le certificat
+spec:
+  domains:
+    - maelusers.duckdns.org
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: managed-cert-ingress-3
+  annotations:
+    deletionProtection: "true" # Commenter pour supprimer le certificat
+spec:
+  domains:
+    - maelcstj.freeddns.org
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: managed-cert-ingress-4
+  annotations:
+    deletionProtection: "true" # Commenter pour supprimer le certificat
+spec:
+  domains:
+    - maelusers.freeddns.org
+
+# Créer un FrontendConfig dans Terraform et l'attribuer au Ingress pour la redirection HTTP vers HTTPS
+---
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: security-config-ingress
+spec:
+  sslPolicy: ssl-policy-ingress # Trouver dans gcloud compute ssl-policies list
+  redirectToHttps:
+    enabled: true # Forcer redirection HTTP (80) vers HTTPS (443) avec encryption SSL
