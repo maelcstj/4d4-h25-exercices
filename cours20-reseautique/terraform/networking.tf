@@ -101,32 +101,38 @@ resource "google_compute_global_address" "address_ingress_tf" {
     command = "echo ${self.address}"
   }
 
-  # DuckDNS : https://www.duckdns.org/install.jsp
-  # Token est en haut de la page à droite
-  # curl -k "https://www.duckdns.org/update?domains=my-domain&token=my-token&ip=my-new-ip"
+  # DuckDNS (https://www.duckdns.org/install.jsp)
+  # 1) Copier le Token est en haut à droite de la page 
+  # 2) Exécuter la commande suivante :
+  # curl -k "https://www.duckdns.org/update?domains=<my-domain>&token=<my-token>&ip=<my-new-ip>"
 
   # provisioner "local-exec" {
   #   when = create
   #   command = "curl -k https://www.duckdns.org/update?domains=my-domain&token=my-token&ip=my-new-ip"
   # }
 
+  # Dynu (https://www.dynu.com/en-US/Support/API)
+  # 1) Créer un API Key dans API Credentials
+  #    Copier la clé sur un des cadenes dans la page de documentation API
+  # 2) Trouver le id de l'entrée DDNS avec la commande suivante :
+  #    https://www.dynu.com/en-US/Support/API#/dns/dnsGet
+  # 3) Mettre à jour l'entrée DDNS avec la commande suivante :
+  #    Seuls "name", "ipv4Adress", "ipv4" et "ipv4WildcardAlias" sont obligatoires
+  #    https://www.dynu.com/en-US/Support/API#/dns/dnsIdPost
   # provisioner "local-exec" {
   #   when = create
-  #   command = "curl -k https://www.duckdns.org/update?domains=my-domain&token=my-token&ip=my-new-ip"
-  # }
-
-  # Dynu : https://www.dynu.com/DynamicDNS/IPUpdateClient/cURL 
-  # Token est dans API Credentials
-  # curl -k "https://api.dynu.com/nic/update?hostname=my-domain&token=my-token&myip=my-new-ip"
-
-  # provisioner "local-exec" {
-  #   when = create
-  #   command = "curl -k https://www.duckdns.org/update?domains=my-domain&token=my-token&ip=my-new-ip"
-  # }
-
-  # provisioner "local-exec" {
-  #   when = create
-  #   command = "curl -k https://www.duckdns.org/update?domains=my-domain&token=my-token&ip=my-new-ip"
+  #   command = <<EOT
+  #   curl -X POST "https://api.dynu.com/v2/dns/<domain-id>" \
+  #     -H "accept: application/json" \
+  #     -H "API-Key: <api-key>" \
+  #     -H "Content-Type: application/json" \
+  #     -d "{ 
+  #           \"name\": \"<domain-name>\", 
+  #           \"ipv4Address\": \"<ip-adress>\",
+  #           \"ipv4\": true,
+  #           \"ipv4WildcardAlias\": true,
+  #         }"
+  #   EOT
   # }
 
 }
