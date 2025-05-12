@@ -83,16 +83,14 @@ resource "google_service_networking_connection" "network_connection_vpc_tf" {
 resource "google_compute_global_address" "address_ingress_tf" {
   name = "address-ingress-tf"
 
-  # Ne pas utiliser le réseau privé afin d'avoir une adresse publique pour le Ingress
-  # network = google_compute_network.network_custom_tf.id
-
   # Ne pas détruire l'adresse IP afin de faire des tests sur les certificats
   # Commenter à la fin de l'exercice, car les adresses publique ont un coût associé
   # lifecycle {
   #   prevent_destroy = true
   # }
 
-  # TODO: Mettre à jour les entrées DNS lorsque l'adresse du Ingress est modifiée
+  # Ne pas utiliser le réseau privé afin d'avoir une adresse publique pour le Ingress
+  # network = google_compute_network.network_custom_tf.id
   # self : permet de référencer la resource parent qui vient d'être créée 
   # self.address = google_compute_global_address.address_ingress_tf.address
 
@@ -100,7 +98,26 @@ resource "google_compute_global_address" "address_ingress_tf" {
     when = create
     command = "echo ${self.address}"
   }
+}
 
+# Mettre à jour les entrées DNS lorsque l'adresse IP du Ingress est modifiée
+resource "null_resource" "address_ingress_local_exec" {
+
+  # Attendre que l'adresse IP soit créée avant d'exécuter les commandes
+  depends_on = [google_compute_global_address.address_ingress_tf]
+
+  # Forcer l'exécution des commandes à chaque fois que "terraform apply" est exécuté
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
+  # Afficher l'adresse IP du Ingress dans le terminal
+  provisioner "local-exec" {
+    when    = create
+    command = "echo ${google_compute_global_address.address_ingress_tf.address}"
+  }
+  
+  # TODO: Mettre à jour les entrées DNS lorsque l'adresse du Ingress est modifiée
   # DuckDNS (https://www.duckdns.org/install.jsp)
   # 1) Copier le Token est en haut à droite de la page 
   # 2) Exécuter la commande suivante :
@@ -136,6 +153,3 @@ resource "google_compute_global_address" "address_ingress_tf" {
   # }
 
 }
-
-
-
